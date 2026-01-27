@@ -1,0 +1,20 @@
+# Links for Government Data (2024-2025)
+
+## 1. Public Distribution System (NFSA) - Allocation & Offtake
+These reports contain month-wise allocation of food grains to states.
+- December 2024: https://dfpd.gov.in/WriteReadData/FoodBulletinUploadDocuments/594df087-a371-49a6-a2f0-da5db506906f_Foodgrain%20Bulletin%20for%20December,%202024.pdf
+- January 2025: https://dfpd.gov.in/WriteReadData/FoodBulletinUploadDocuments/ef82340c-b24e-46d8-99f6-5dab974113b0_Foodgrains%20Bulletin%20for%20January,%202025.pdf
+- February 2025: https://dfpd.gov.in/WriteReadData/FoodBulletinUploadDocuments/cde9f0fd-9992-4752-b61a-618e46ad4518_Foodgrains%20Bulletin%20for%20February,%202025.pdf
+
+## 2. Public Grievances (CPGRAMS)
+Monthly progress reports with state-wise grievance stats.
+- January 2025: https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2106128 (Press Release with Summary)
+- February 2025: https://www.darpg.gov.in/hi/whatsnew/darpg-monthly-report-central-february-2025 (Landing Page)
+
+## 3. District GeoJSON
+- India District Boundaries (2024 updated): https://raw.githubusercontent.com/datta07/INDIAN-SHAPEFILES/master/INDIA/DISTRICTS.geojson
+- Alternative Simplified: https://gist.githubusercontent.com/maneetgoyal/74f386908022a101b44d32a4e40e02c5/raw/indian-districts-simplified.json
+
+## 4. OGD Metadata (Reference)
+- CPGRAMS Dashboard: https://www.cpgrams.gov.in/
+- DFPD Reports: https://dfpd.gov.in/reports/en
