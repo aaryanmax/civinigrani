@@ -2,72 +2,69 @@
 
 **Jahan Policy khatam hoti hai, wahan _Nigrani_ shuru hoti hai**
 
-CiviNigrani is a governance intelligence platform that measures whether public policy promises — specifically the Public Distribution System (PDS) in Uttar Pradesh — are delivered on the ground, and detects early citizen distress signals using public data. It combines delivery gap analysis with grievance signal mining to provide **actionable insights** for policymakers, researchers, and civil society.
+CiviNigrani is an AI-powered governance intelligence platform that measures whether public policy promises — specifically the Public Distribution System (PDS) in Uttar Pradesh — are delivered on the ground. It combines delivery gap analysis, ML-powered forecasting, and grievance signal mining to provide **actionable insights** for policymakers, researchers, and civil society.
 
 ---
 
 ## 📌 Why This Matters
 
-The **Public Distribution System (PDS)** is a cornerstone of food security in India, distributing foodgrains at subsidized prices to eligible beneficiaries under the National Food Security Act (NFSA). Publicly available PDS allocation and distribution data (e.g., district-wise wheat and rice distribution) provide structured information on delivery outcomes.
+The **Public Distribution System (PDS)** is a cornerstone of food security in India, distributing foodgrains at subsidized prices to eligible beneficiaries under the National Food Security Act (NFSA). Publicly available PDS allocation and distribution data provide structured information on delivery outcomes.
 
-At the same time, **citizen grievance data** — such as monthly complaints and their resolution status — signal where implementation is failing or under stress. By correlating delivery gaps with spikes in complaints, CiviNigrani acts as an early warning system for governance failures.
-
----
-
-## 🔍 Core Plan & Pipeline
-
-1. **Policy & Geography Locked**
-
-   * Policy: Public Distribution System (PDS) under NFSA
-   * Region: Uttar Pradesh
-   * Time window: Latest available (2025 data where possible)
-
-2. **Data Collection**
-
-   * PDS allocation/offtake data (state/district/month) from NFSA dashboards and open CSVs (e.g., PDS District Wise Monthly Wheat and Rice).
-   * Citizen grievance data from CPGRAMS and monthly reports (receipt/disposal counts) for PDS-related complaints.
-
-3. **Data Ingestion & Cleaning**
-
-   * Convert raw datasets (CSV, PDF) into standardized tables
-   * Normalize district names and date formats
-   * Add provenance metadata (source, URL, extraction date)
-
-4. **Feature Engineering**
-
-   * Compute **Policy Reality Gap Index (PRGI)**: delivery gap = 1 − (offtake/allocation)
-   * Compute **Public Grievance Signal Mining (PGSM)**: monthly grievance counts, pendency, spike detection
-
-5. **Correlation & Risk Flagging**
-
-   * Link PRGI with grievance spikes in lag windows
-   * Generate risk flags for districts/months requiring attention
-
-6. **Visualization & Dashboard**
-
-   * Streamlit UI showing heatmaps, time series, risk lists, and source-linked data tables
+At the same time, **citizen grievance data** — such as monthly complaints and their resolution status — signal where implementation is failing or under stress. By correlating delivery gaps with spikes in complaints and forecasting future risks using machine learning, CiviNigrani acts as an early warning system for governance failures.
 
 ---
 
-## Key Features
+## 🎯 Key Features
 
-* 📈 **PRGI (Policy Reality Gap Index):** Quantifies promise vs delivery
-* 🔔 **Grievance Signal Mining:** Detects stress in citizen complaint trends
-* 🔄 **Correlation Engine:** Flags potential governance risk signals
-* 📌 **Evidence Traceability:** All figures link back to public data sources
-* 🌍 **User Friendly Dashboard:** Intuitive UI without black-box AI
-* ⚖️ **Non-partisan, neutral analysis:** Focused on delivery, not politics
+### 📊 Overview Dashboard
+- **Policy Reality Gap Index (PRGI)**: Quantifies promise vs delivery (Allocation - Distribution)
+- **Interactive Risk Map**: Geospatial visualization of district-level delivery gaps across UP
+- **High-Risk Alerts**: Districts ranked by 3-month average PRGI with risk classification
+- **Grievance Analytics**: Multi-line trend charts showing receipts, disposal, and pending complaints
+- **Disposal Efficiency Gauge**: Animated gauge showing grievance resolution performance
+
+### 🤖 AI Intelligence Center
+- **ML Forecasts**: Prophet-based 3-month ahead PRGI predictions with confidence intervals
+- **Risk Distribution Charts**: State-wide forecast risk breakdown (Critical/High/Low)
+- **PGSM Validation**: Accuracy metrics for grievance spike predictions
+- **News Intelligence**: Automated root cause analysis using NewsAPI (when configured)
+
+### 🛡️ ArmorIQ Security Guard
+- **PII Detection**: Local regex-based filtering for Indian mobile numbers, Aadhaar patterns, emails
+- **Toxicity Filtering**: Keyword-based content moderation
+- **No external API required** - runs completely locally
+
+### 🤖 AI Assistant
+- **Conversational Interface**: Ask questions about district performance
+- **Dynamic Data Analysis**: Real-time insights from live PDS data
+- **Data Sanity Checks**: Flags potential data corruption (e.g., 100% gaps)
+- **ArmorIQ Verified**: All responses scanned for PII and toxic content
+
+### 📚 About Page
+- **Methodology Documentation**: Clear explanations of PRGI, PGSM, and risk frameworks
+- **Interactive Examples**: Step-by-step stories showing how the system detects failures
+- **Verified Links**: Official government sources and trusted news coverage
 
 ---
 
 ## 💻 Tech Stack
 
-* **Language:** Python
-* **Framework:** Streamlit (dashboard)
-* **Data Processing:** pandas, numpy, scipy, statsmodels
-* **Visualization:** matplotlib, seaborn, plotly, folium
-* **Data Storage:** CSV / SQLite (MVP)
-* **Environment:** Ubuntu / Mac / Windows
+### Core Technologies
+- **Language**: Python 3.8+
+- **Framework**: Streamlit (multi-page dashboard)
+- **Data Processing**: pandas, numpy, scipy, statsmodels
+- **Visualization**: Plotly, Folium, Seaborn, Matplotlib
+- **ML/AI**: Prophet (time-series forecasting)
+- **Geospatial**: GeoPandas, Streamlit-Folium
+- **APIs**: NewsAPI (optional), BeautifulSoup4 (web scraping)
+
+### Key Libraries
+- `streamlit` - Interactive web dashboard
+- `prophet` - ML forecasting engine
+- `plotly` - Interactive charts and gauges  
+- `folium` - Geographic risk maps
+- `geopandas` - Spatial data processing
+- `python-dotenv` - Secure API key management
 
 ---
 
@@ -77,32 +74,39 @@ At the same time, **citizen grievance data** — such as monthly complaints and 
 
 - **Python 3.8+** (Check with `python3 --version` or `python --version`)
 - **pip** (Python package installer)
+- **Git** (to clone the repository)
 
-### One-Click Install
+### Quick Start
 
 #### **Linux / macOS**
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/civinigrani.git
+cd civinigrani
+
+# Run the installer
 chmod +x install.sh
 ./install.sh
 ```
 
-The script will:
-- Create a virtual environment
-- Install all dependencies
-- Provide instructions to run the app
-
 #### **Windows PowerShell**
 
 ```powershell
+# Clone the repository
+git clone https://github.com/yourusername/civinigrani.git
+cd civinigrani
+
+# Run the installer
 Set-ExecutionPolicy Bypass -Scope Process -Force
 .\install.ps1
 ```
 
-The script will:
-- Create a virtual environment
-- Install all dependencies
-- Provide instructions to run the app
+The installer will:
+- ✅ Check Python version
+- ✅ Create a virtual environment
+- ✅ Install all dependencies
+- ✅ Provide run instructions
 
 ### Manual Installation
 
@@ -118,8 +122,10 @@ source venv/bin/activate
 # On Windows:
 .\venv\Scripts\Activate.ps1
 
-# Install dependencies
+# Upgrade pip
 pip install --upgrade pip
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
@@ -130,35 +136,231 @@ pip install -r requirements.txt
 After installation, activate the virtual environment and run:
 
 ```bash
+# Activate virtual environment (if not already active)
+source venv/bin/activate  # Linux/macOS
+.\venv\Scripts\Activate.ps1  # Windows
+
+# Start the dashboard
 streamlit run Home.py
 ```
 
 The dashboard will open automatically in your browser at `http://localhost:8501`.
 
-### Features Available:
-- **Dashboard**: PRGI analysis with delivery progress visualization
-- **Predictions**: High-risk district identification  
-- **Methodology**: Technical documentation and formulas
-- **Accessibility**: Dark mode, font sizing, and language options
+### Optional: NewsAPI Configuration
+
+For live news analysis (optional):
+
+1. Get a free API key from [NewsAPI.org](https://newsapi.org/)
+2. Create a `.env` file in the project root:
+   ```
+   NEWS_API_KEY=your_api_key_here
+   ```
+3. Restart the app - news intelligence will now show live articles
+
+**Note**: The app works fully without NewsAPI - it will use demo data as fallback.
+
+---
+
+## ☁️ Deploying to Streamlit Cloud
+
+Want to share your dashboard publicly? Deploy to Streamlit Cloud for free!
+
+### Quick Deploy
+
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "Ready for deployment"
+   git push origin main
+   ```
+
+2. **Deploy on Streamlit Cloud**
+   - Go to [share.streamlit.io](https://share.streamlit.io)
+   - Sign in with GitHub
+   - Click "New app" → Select your repository
+   - Set main file: `Home.py`
+   - Click "Deploy!"
+
+3. **Configure Secrets** (Optional)
+   - In app settings, add your `NEWS_API_KEY` under "Secrets"
+   - Format: `NEWS_API_KEY = "your_key_here"`
+
+### Verify Deployment Readiness
+
+Run the deployment checker before pushing:
+
+```bash
+python check_deployment.py
+```
+
+This validates:
+- ✅ All required files present
+- ✅ Dependencies importable
+- ✅ Data files accessible
+- ✅ Secrets properly configured
+
+**See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment guide and troubleshooting.**
+
+---
+
+## 📱 Application Pages
+
+### 1. 📊 Overview
+**Unified dashboard combining:**
+- **Dashboard Tab**: PRGI analysis, delivery progress bars, trend charts
+- **Risk Map Tab**: Interactive choropleth map of Uttar Pradesh districts
+- **Alerts Tab**: Top high-risk districts ranked by severity
+- **Grievances Tab**: PGSM analytics with animated trend charts and disposal gauge
+
+### 2. 🤖 AI Intelligence
+**Machine learning and validation:**
+- **AI Forecasts Tab**: Prophet-based 3-month predictions with district selector
+- **PGSM Validation Tab**: Historical accuracy of grievance spike predictions
+
+### 3. 📚 About
+**Methodology and documentation:**
+- PRGI calculation formulas
+- PGSM signal detection logic
+- Risk assessment framework
+- Interactive example walkthrough
+- Official data source links
 
 ---
 
 ## 📂 Data Sources (Public & Open)
 
-Links you can populate into **data/samples/links.txt**:
+All data used is from official government sources:
 
-* Public Distribution System (PDS) District Monthly Data CSV — district-wise wheat/rice distribution (open data). ([ckandev.indiadataportal.com][1])
-* NFSA official portal (policy & allocation context). ([NFSA][2])
-* CPGRAMS public grievance portal (complaints & statistics).
+### PDS Data
+- **Source**: India Data Portal - Public Distribution System
+- **URL**: [ckandev.indiadataportal.com](https://ckandev.indiadataportal.com/en_GB/dataset/public-distribution-system-pds)
+- **Contains**: District-wise monthly wheat and rice allocation and distribution
 
-Use these to build real datasets for PRGI and PGSM.
+### Grievance Data
+- **Source**: CPGRAMS (Centralized Public Grievance Redress and Monitoring System)
+- **URL**: [cpgrams.gov.in](https://www.cpgrams.gov.in/)
+- **Contains**: Monthly receipts, disposal, and pending counts
+
+### Geographic Data
+- **Source**: Gist - UP District Boundaries (GeoJSON)
+- **URL**: Community-maintained shapefiles
+- **Contains**: District polygons for choropleth mapping
 
 ---
 
-## Disclaimer
+## 🧠 AI & ML Features
 
-This project uses public data for research and demonstration. It does not make political claims or judgments. All interpretations are based on evidence available in open datasets.
+### Prophet Forecasting
+- Trains separate models for each district
+- Uses historical PRGI data (2024-2025)
+- Generates 3-month ahead predictions
+- Includes confidence intervals (upper/lower bounds)
+- **Model Caching**: Trained models saved to `data/cache/` for fast reloading
 
+### PGSM Validation
+- Correlates grievance spikes with delivery gaps
+- Tests predictive accuracy with lag analysis
+- Generates validation reports in `reports/`
 
-[1]: https://ckandev.indiadataportal.com/en_GB/dataset/public-distribution-system-pds/resource/45ad7278-f4b1-4472-9351-1f7caf147ee0 "Public Distribution System (PDS) - PDS District Wise Monthly Wheat and Rice - India Data portal"
-[2]: https://nfsa.gov.in/portal/PDS_page "NFSA"
+### ArmorIQ Local Guard
+- Regex-based PII detection (no external API)
+- Keyword-based toxicity filtering
+- Runs completely on-device for privacy
+
+---
+
+## 📊 Core Metrics
+
+### PRGI (Policy Reality Gap Index)
+```
+PRGI = (Allocated - Distributed) / Allocated
+```
+- **0%**: Perfect delivery
+- **15-30%**: High risk
+- **>30%**: Critical risk
+
+### PGSM (Public Grievance Signal Mining)
+- Detects anomalous spikes in monthly complaints
+- Spike threshold: Current month > 1.5× of 3-month average
+- Correlates with PRGI changes in subsequent months
+
+---
+
+## 🛠️ Development
+
+### Project Structure
+```
+civinigrani/
+├── Home.py                    # Entry point
+├── pages/                     # Streamlit pages
+│   ├── 1_Overview.py         # Main dashboard + map + alerts + PGSM
+│   ├── 2_AI_Intelligence.py  # Forecasts + validation
+│   └── 3_About.py            # Documentation
+├── src/                       # Core modules
+│   ├── ai_engine.py          # AI assistant with dynamic data analysis
+│   ├── armoriq_guard.py      # Local PII/toxicity filter
+│   ├── config.py             # Configuration and constants
+│   ├── loaders.py            # Data loading utilities
+│   ├── prgi.py               # PRGI calculation engine
+│   ├── ui.py                 # Reusable UI components
+│   ├── intelligence/         
+│   │   └── news_analyzer.py # NewsAPI integration
+│   ├── ml/                   
+│   │   └── forecaster.py    # Prophet ML pipeline
+│   └── validation/           
+│       └── pgsm_validator.py # PGSM spike detection & validation
+├── scripts/                   # Data scraping utilities
+├── data/                      # Data directory
+│   ├── raw/                  # Original CSV files
+│   ├── cache/                # Cached ML models
+│   └── processed/            # Generated datasets
+└── reports/                   # Generated markdown reports
+```
+
+### Running Scripts
+```bash
+# Data scraping (if source URLs change)
+python scripts/scrape_data.py
+
+# CPGRAMS extraction
+python scripts/extract_cpgrams.py
+```
+
+---
+
+## ⚠️ Disclaimer
+
+This project uses public data for research and demonstration purposes. It does not make political claims or judgments. All interpretations are based on evidence available in open government datasets. The system is designed to support evidence-based governance, not to replace human decision-making.
+
+---
+
+## 📄 License
+
+MIT License - See [LICENSE](LICENSE) file for details.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+**Areas for contribution:**
+- Additional data sources
+- Enhanced ML models
+- New visualization types
+- Documentation improvements
+- Bug fixes and optimizations
+
+---
+
+## 🙏 Acknowledgments
+
+- **NFSA** for maintaining open PDS data
+- **CPGRAMS** for public grievance statistics
+- **India Data Portal** for structured datasets
+- **Prophet** by Meta for time-series forecasting
+- **Streamlit** for the amazing dashboard framework
+
+---
+
+**Built with ❤️ for better governance through data transparency**

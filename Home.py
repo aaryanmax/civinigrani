@@ -9,9 +9,9 @@
 # Structure:
 #   Home.py              <- You are here (Home)
 #   pages/
-#     1_Dashboard.py    <- PRGI Analysis & Visuals
-#     2_Predictions.py  <- High-Risk Districts
-#     3_Methodology.py  <- Technical Documentation
+#     1_Overview.py      <- Dashboard + Risk Map + Alerts
+#     2_AI_Intelligence.py <- AI Forecasts + PGSM Validation
+#     3_About.py         <- Technical Documentation
 # ==============================
 
 import streamlit as st
@@ -66,29 +66,29 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown(
         """
-        **Dashboard**  
+        **Overview**  
         View delivery gap analysis with interactive visuals and real-time metrics.
         """
     )
-    st.page_link("pages/1_Dashboard.py", label="Open Dashboard", icon="📊")
+    st.page_link("pages/1_Overview.py", label="Open Overview", icon="📊")
 
 with col2:
     st.markdown(
         """
-        **Predictions**  
-        See the top high-risk districts ranked by delivery gap severity.
+        **AI Intelligence**  
+        AI-powered forecasts, PGSM validation, and news analysis.
         """
     )
-    st.page_link("pages/2_Predictions.py", label="Open Predictions", icon="🔮")
+    st.page_link("pages/2_AI_Intelligence.py", label="Open AI Intelligence", icon="🤖")
 
 with col3:
     st.markdown(
         """
-        **Methodology**  
+        **About**  
         Understand how PRGI, PGSM, and risk levels are calculated.
         """
     )
-    st.page_link("pages/3_Methodology.py", label="Open Methodology", icon="📚")
+    st.page_link("pages/3_About.py", label="Open About", icon="📚")
 
 # ------------------------------
 # Footer

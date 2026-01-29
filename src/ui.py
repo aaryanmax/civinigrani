@@ -1,4 +1,10 @@
 import streamlit as st
+from streamlit_float import float_init, float_css_helper
+from src.ai_engine import MockAIEngine
+from src.armoriq_guard import ArmorIQGuard
+
+ai_engine = MockAIEngine()
+armor_iq = ArmorIQGuard()
 
 def init_accessibility_state():
     """Initialize session state for accessibility options."""
@@ -8,6 +14,8 @@ def init_accessibility_state():
         st.session_state.font_size = 16  # Default font size in px
     if "language" not in st.session_state:
         st.session_state.language = "EN"
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
 
 def apply_accessibility_styles():
     """Apply CSS based on current accessibility settings."""
@@ -61,6 +69,55 @@ def apply_accessibility_styles():
     [data-testid="stSidebar"] hr {{
         display: none !important;
     }}
+    
+    /* Larger sidebar navigation titles */
+    [data-testid="stSidebarNav"] span {{
+        font-size: 18px !important;
+        font-weight: 600 !important;
+    }}
+    /* Compact sidebar - no scrollbar */
+    [data-testid="stSidebar"] > div:first-child {{
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        overflow: hidden !important; /* Force hide scrollbar */
+    }}
+    [data-testid="stSidebar"] [data-testid="stExpander"] {{
+        margin-bottom: 0.25rem !important;
+    }}
+    
+    /* Fix weird tab switching animation */
+    [data-testid="stSidebarNav"] a {{
+        padding: 5px 8px !important;
+        transition: none !important; /* Disable transition to stop size jitter */
+    }}
+    [data-testid="stSidebarNav"] span {{
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        transition: none !important;
+        transform: none !important;
+    }}
+    
+    /* Large logo spanning most of sidebar width */
+    [data-testid="stSidebar"] [data-testid="stLogo"] img {{
+        width: 90% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 50px !important;
+        max-height: 60px !important;
+        object-fit: contain !important;
+        margin: 0 auto !important;
+        display: block !important;
+    }}
+    
+    /* Larger page titles */
+    h1 {{
+        font-size: {font_size + 20}px !important;
+        font-weight: 700 !important;
+    }}
+    h2 {{
+        font-size: {font_size + 14}px !important;
+        font-weight: 600 !important;
+    }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -73,7 +130,7 @@ def render_accessibility_controls():
             col1, col2 = st.columns([1, 1])
             with col1:
                 if st.button("🌙 Dark" if not st.session_state.dark_mode else "☀️ Light", 
-                             key="theme_toggle", use_container_width=True):
+                             key="theme_toggle", width="stretch"):
                     st.session_state.dark_mode = not st.session_state.dark_mode
                     st.rerun()
             
@@ -81,12 +138,12 @@ def render_accessibility_controls():
             with col2:
                 font_col1, font_col2 = st.columns(2)
                 with font_col1:
-                    if st.button("A-", key="font_decrease", use_container_width=True):
+                    if st.button("A-", key="font_decrease", width="stretch"):
                         if st.session_state.font_size > 12:
                             st.session_state.font_size -= 2
                             st.rerun()
                 with font_col2:
-                    if st.button("A+", key="font_increase", use_container_width=True):
+                    if st.button("A+", key="font_increase", width="stretch"):
                         if st.session_state.font_size < 24:
                             st.session_state.font_size += 2
                             st.rerun()
@@ -107,7 +164,8 @@ def render_sidebar():
     init_accessibility_state()
     
     # Logo for top-level branding
-    st.logo("assets/logo.png", size="large", icon_image="assets/logo.png")
+    # Logo for top-level branding
+    st.logo("assets/CiviNigrani.png", size="large", icon_image="assets/CiviNigrani.png")
     
     # Apply accessibility styles
     apply_accessibility_styles()
@@ -118,6 +176,82 @@ def render_sidebar():
     
     # Accessibility Controls
     render_accessibility_controls()
-    
+
     with st.sidebar:
         st.caption("Public data only • No personal data")
+    
+    # Floating AI Bubble (appears on ALL pages via sidebar call)
+    _render_floating_ai_bubble()
+
+def _render_floating_ai_bubble():
+    """
+    Renders AI Assistant as a button in sidebar that opens a dialog popup.
+    Dialog has close button (X) at top right. Stays open after sending messages.
+    """
+    # Initialize dialog state
+    if "ai_dialog_open" not in st.session_state:
+        st.session_state.ai_dialog_open = False
+    
+    # Define the dialog content (not using decorator to avoid duplicate ID)
+    def show_ai_dialog():
+        # Use fragment to contain the dialog
+        @st.dialog("🤖 AI Assistant", width="small")
+        def _dialog_content():
+            # Simple header
+            st.caption("🛡️ Verified by ArmorIQ SDK")
+            
+            # Chat history display in a container
+            chat_container = st.container(height=300)
+            with chat_container:
+                history = st.session_state.get("chat_history", [])
+                if history:
+                    for msg in history[-8:]:
+                        if msg["role"] == "user":
+                            st.markdown(f"**You:** {msg['content']}")
+                        else:
+                            badge = " ✓" if msg.get("verified") else ""
+                            st.markdown(f"**AI:** {msg['content']}{badge}")
+                else:
+                    st.write("Ask about PDS gaps, district trends, or best performers!")
+            
+            # Input form
+            with st.form("dialog_ai_form", clear_on_submit=True):
+                q = st.text_input(
+                    "Ask", 
+                    key="dialog_ai_q", 
+                    label_visibility="collapsed", 
+                    placeholder="Type your question..."
+                )
+                if st.form_submit_button("Send", type="primary", width="stretch"):
+                    if q:
+                        if "chat_history" not in st.session_state:
+                            st.session_state.chat_history = []
+                        st.session_state.chat_history.append({"role": "user", "content": q})
+                        resp = ai_engine.query(q)
+                        scan = armor_iq.scan(resp)
+                        st.session_state.chat_history.append({
+                            "role": "ai", 
+                            "content": resp if scan["safe"] else f"⚠️ {scan['flagged_for']}",
+                            "verified": scan["safe"]
+                        })
+                        st.session_state.ai_dialog_open = True
+                        st.rerun()
+        
+        _dialog_content()
+    
+    # Render button in sidebar to open dialog
+    with st.sidebar:
+        st.divider()
+        if st.button("🤖 **AI Assistant**", width="stretch", type="secondary"):
+            st.session_state.ai_dialog_open = True
+    
+    # Show dialog if flag is set, then reset flag
+    if st.session_state.ai_dialog_open:
+        st.session_state.ai_dialog_open = False  # Reset immediately to prevent auto-open on page switch
+        show_ai_dialog()
+
+
+# Deprecated function for backward compatibility
+def render_ai_bubble():
+    """Deprecated: Use render_sidebar() which auto-includes the AI tab."""
+    pass

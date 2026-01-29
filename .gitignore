@@ -69,7 +69,7 @@ ipython_config.py
 
 # Streamlit
 .streamlit/secrets.toml
-.streamlit/config.toml
+.streamlit/config.toml.local
 
 # Project-specific data
 data/raw/*
@@ -95,3 +95,12 @@ Thumbs.db
 Desktop.ini
 .Spotlight-V100
 .Trashes
+
+# Temporary/test files
+check_data.py
+current_*.png
+test_*.py
+*_temp.py
+
+# Model cache
+data/cache/
