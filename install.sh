@@ -43,6 +43,13 @@ echo "   This may take a few minutes..."
 pip install -r requirements.txt --quiet
 
 echo ""
+echo "🔄 Initializing Data Pipeline..."
+echo "   1. Fetching raw data & PDFs..."
+python scripts/scrape_data.py
+echo "   2. Extracting grievance intelligence..."
+python scripts/extract_cpgrams.py
+
+echo ""
 echo "═══════════════════════════════════════════════════════════"
 echo "  ✅ Installation Complete!"
 echo "═══════════════════════════════════════════════════════════"

@@ -96,7 +96,7 @@ def safe_get_soup(url: str):
     try:
         resp = requests.get(url, headers=HEADERS, timeout=30)
         resp.raise_for_status()
-        return BeautifulSoup(resp.text, "lxml")
+        return BeautifulSoup(resp.text, "html.parser")
     except Exception as e:
         logger.error(f"Failed to fetch page {url}: {e}")
         return None

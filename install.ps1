@@ -68,6 +68,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
+Write-Host "🔄 Initializing Data Pipeline..." -ForegroundColor Yellow
+Write-Host "   1. Fetching raw data & PDFs..." -ForegroundColor Gray
+python scripts/scrape_data.py
+Write-Host "   2. Extracting grievance intelligence..." -ForegroundColor Gray
+python scripts/extract_cpgrams.py
+
+Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Green
 Write-Host "  ✅ Installation Complete!" -ForegroundColor Green
 Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Green

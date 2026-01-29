@@ -11,6 +11,9 @@ from pathlib import Path
 def check_files():
     """Check if required files exist"""
     print("\n📁 Checking Required Files...")
+    # Root is parent of diagnostics/
+    root = Path(__file__).resolve().parent.parent
+    
     required_files = [
         "Home.py",
         "requirements.txt",
@@ -22,7 +25,7 @@ def check_files():
     
     missing = []
     for file in required_files:
-        path = Path(file)
+        path = root / file
         if path.exists():
             print(f"  ✓ {file}")
         else:
@@ -34,6 +37,10 @@ def check_files():
 def check_imports():
     """Test critical imports"""
     print("\n📦 Testing Critical Imports...")
+    # Add root to sys.path
+    root = Path(__file__).resolve().parent.parent
+    sys.path.insert(0, str(root))
+    
     critical_modules = [
         "streamlit",
         "pandas",
@@ -51,6 +58,11 @@ def check_imports():
             __import__(module)
             print(f"  ✓ {module}")
         except ImportError:
+            try:
+                # Try pip installing if missing (simulated check)
+                pass 
+            except:
+                pass
             print(f"  ✗ {module} - FAILED")
             failed.append(module)
     
@@ -59,7 +71,8 @@ def check_imports():
 def check_data_size():
     """Check if data directory is too large"""
     print("\n💾 Checking Data Sizes...")
-    data_path = Path("data")
+    root = Path(__file__).resolve().parent.parent
+    data_path = root / "data"
     
     # Get size of data directory
     try:

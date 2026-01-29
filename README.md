@@ -17,6 +17,7 @@ At the same time, **citizen grievance data** — such as monthly complaints and 
 ## 🎯 Key Features
 
 ### 📊 Overview Dashboard
+
 - **Policy Reality Gap Index (PRGI)**: Quantifies promise vs delivery (Allocation - Distribution)
 - **Interactive Risk Map**: Geospatial visualization of district-level delivery gaps across UP
 - **High-Risk Alerts**: Districts ranked by 3-month average PRGI with risk classification
@@ -24,23 +25,27 @@ At the same time, **citizen grievance data** — such as monthly complaints and 
 - **Disposal Efficiency Gauge**: Animated gauge showing grievance resolution performance
 
 ### 🤖 AI Intelligence Center
+
 - **ML Forecasts**: Prophet-based 3-month ahead PRGI predictions with confidence intervals
 - **Risk Distribution Charts**: State-wide forecast risk breakdown (Critical/High/Low)
 - **PGSM Validation**: Accuracy metrics for grievance spike predictions
 - **News Intelligence**: Automated root cause analysis using NewsAPI (when configured)
 
 ### 🛡️ ArmorIQ Security Guard
+
 - **PII Detection**: Local regex-based filtering for Indian mobile numbers, Aadhaar patterns, emails
 - **Toxicity Filtering**: Keyword-based content moderation
 - **No external API required** - runs completely locally
 
 ### 🤖 AI Assistant
+
 - **Conversational Interface**: Ask questions about district performance
 - **Dynamic Data Analysis**: Real-time insights from live PDS data
 - **Data Sanity Checks**: Flags potential data corruption (e.g., 100% gaps)
 - **ArmorIQ Verified**: All responses scanned for PII and toxic content
 
 ### 📚 About Page
+
 - **Methodology Documentation**: Clear explanations of PRGI, PGSM, and risk frameworks
 - **Interactive Examples**: Step-by-step stories showing how the system detects failures
 - **Verified Links**: Official government sources and trusted news coverage
@@ -50,6 +55,7 @@ At the same time, **citizen grievance data** — such as monthly complaints and 
 ## 💻 Tech Stack
 
 ### Core Technologies
+
 - **Language**: Python 3.8+
 - **Framework**: Streamlit (multi-page dashboard)
 - **Data Processing**: pandas, numpy, scipy, statsmodels
@@ -59,9 +65,10 @@ At the same time, **citizen grievance data** — such as monthly complaints and 
 - **APIs**: NewsAPI (optional), BeautifulSoup4 (web scraping)
 
 ### Key Libraries
+
 - `streamlit` - Interactive web dashboard
 - `prophet` - ML forecasting engine
-- `plotly` - Interactive charts and gauges  
+- `plotly` - Interactive charts and gauges
 - `folium` - Geographic risk maps
 - `geopandas` - Spatial data processing
 - `python-dotenv` - Secure API key management
@@ -76,7 +83,9 @@ At the same time, **citizen grievance data** — such as monthly complaints and 
 - **pip** (Python package installer)
 - **Git** (to clone the repository)
 
-### Quick Start
+### Quick Start (Recommended)
+
+The installation script now automatically **sets up the environment** and **fetches all required data sources**, so you are ready to run immediately.
 
 #### **Linux / macOS**
 
@@ -85,7 +94,7 @@ At the same time, **citizen grievance data** — such as monthly complaints and 
 git clone https://github.com/yourusername/civinigrani.git
 cd civinigrani
 
-# Run the installer
+# Run the automated installer
 chmod +x install.sh
 ./install.sh
 ```
@@ -97,36 +106,32 @@ chmod +x install.sh
 git clone https://github.com/yourusername/civinigrani.git
 cd civinigrani
 
-# Run the installer
+# Run the automated installer
 Set-ExecutionPolicy Bypass -Scope Process -Force
 .\install.ps1
 ```
 
 The installer will:
-- ✅ Check Python version
-- ✅ Create a virtual environment
-- ✅ Install all dependencies
-- ✅ Provide run instructions
 
-### Manual Installation
+1. ✅ Check Python version
+2. ✅ Create a virtual environment & install dependencies
+3. 🔄 **Auto-fetch PDS Data**: Downloads the latest allocation datasets
+4. 🔄 **Auto-extract Grievance Data**: Crawls and processes government reports
 
-If you prefer manual setup:
+### Manual Installation (Advanced)
+
+If you prefer to run steps manually:
 
 ```bash
-# Create virtual environment
+# 1. Environment Setup
 python3 -m venv venv
-
-# Activate virtual environment
-# On Linux/macOS:
-source venv/bin/activate
-# On Windows:
-.\venv\Scripts\Activate.ps1
-
-# Upgrade pip
-pip install --upgrade pip
-
-# Install dependencies
+source venv/bin/activate  # Windows: .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
+# 2. Data Pipeline (Crucial Step)
+# You MUST run these to populate the data/ folder
+python scripts/scrape_data.py
+python scripts/extract_cpgrams.py
 ```
 
 ---
@@ -161,64 +166,28 @@ For live news analysis (optional):
 
 ---
 
-## ☁️ Deploying to Streamlit Cloud
-
-Want to share your dashboard publicly? Deploy to Streamlit Cloud for free!
-
-### Quick Deploy
-
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Ready for deployment"
-   git push origin main
-   ```
-
-2. **Deploy on Streamlit Cloud**
-   - Go to [share.streamlit.io](https://share.streamlit.io)
-   - Sign in with GitHub
-   - Click "New app" → Select your repository
-   - Set main file: `Home.py`
-   - Click "Deploy!"
-
-3. **Configure Secrets** (Optional)
-   - In app settings, add your `NEWS_API_KEY` under "Secrets"
-   - Format: `NEWS_API_KEY = "your_key_here"`
-
-### Verify Deployment Readiness
-
-Run the deployment checker before pushing:
-
-```bash
-python check_deployment.py
-```
-
-This validates:
-- ✅ All required files present
-- ✅ Dependencies importable
-- ✅ Data files accessible
-- ✅ Secrets properly configured
-
-**See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment guide and troubleshooting.**
-
----
-
 ## 📱 Application Pages
 
 ### 1. 📊 Overview
+
 **Unified dashboard combining:**
+
 - **Dashboard Tab**: PRGI analysis, delivery progress bars, trend charts
 - **Risk Map Tab**: Interactive choropleth map of Uttar Pradesh districts
 - **Alerts Tab**: Top high-risk districts ranked by severity
 - **Grievances Tab**: PGSM analytics with animated trend charts and disposal gauge
 
 ### 2. 🤖 AI Intelligence
+
 **Machine learning and validation:**
+
 - **AI Forecasts Tab**: Prophet-based 3-month predictions with district selector
 - **PGSM Validation Tab**: Historical accuracy of grievance spike predictions
 
 ### 3. 📚 About
+
 **Methodology and documentation:**
+
 - PRGI calculation formulas
 - PGSM signal detection logic
 - Risk assessment framework
@@ -232,16 +201,19 @@ This validates:
 All data used is from official government sources:
 
 ### PDS Data
+
 - **Source**: India Data Portal - Public Distribution System
 - **URL**: [ckandev.indiadataportal.com](https://ckandev.indiadataportal.com/en_GB/dataset/public-distribution-system-pds)
 - **Contains**: District-wise monthly wheat and rice allocation and distribution
 
 ### Grievance Data
+
 - **Source**: CPGRAMS (Centralized Public Grievance Redress and Monitoring System)
 - **URL**: [cpgrams.gov.in](https://www.cpgrams.gov.in/)
 - **Contains**: Monthly receipts, disposal, and pending counts
 
 ### Geographic Data
+
 - **Source**: Gist - UP District Boundaries (GeoJSON)
 - **URL**: Community-maintained shapefiles
 - **Contains**: District polygons for choropleth mapping
@@ -251,6 +223,7 @@ All data used is from official government sources:
 ## 🧠 AI & ML Features
 
 ### Prophet Forecasting
+
 - Trains separate models for each district
 - Uses historical PRGI data (2024-2025)
 - Generates 3-month ahead predictions
@@ -258,11 +231,13 @@ All data used is from official government sources:
 - **Model Caching**: Trained models saved to `data/cache/` for fast reloading
 
 ### PGSM Validation
+
 - Correlates grievance spikes with delivery gaps
 - Tests predictive accuracy with lag analysis
 - Generates validation reports in `reports/`
 
 ### ArmorIQ Local Guard
+
 - Regex-based PII detection (no external API)
 - Keyword-based toxicity filtering
 - Runs completely on-device for privacy
@@ -272,14 +247,17 @@ All data used is from official government sources:
 ## 📊 Core Metrics
 
 ### PRGI (Policy Reality Gap Index)
+
 ```
 PRGI = (Allocated - Distributed) / Allocated
 ```
+
 - **0%**: Perfect delivery
 - **15-30%**: High risk
 - **>30%**: Critical risk
 
 ### PGSM (Public Grievance Signal Mining)
+
 - Detects anomalous spikes in monthly complaints
 - Spike threshold: Current month > 1.5× of 3-month average
 - Correlates with PRGI changes in subsequent months
@@ -289,6 +267,7 @@ PRGI = (Allocated - Distributed) / Allocated
 ## 🛠️ Development
 
 ### Project Structure
+
 ```
 civinigrani/
 ├── Home.py                    # Entry point
@@ -303,11 +282,11 @@ civinigrani/
 │   ├── loaders.py            # Data loading utilities
 │   ├── prgi.py               # PRGI calculation engine
 │   ├── ui.py                 # Reusable UI components
-│   ├── intelligence/         
+│   ├── intelligence/
 │   │   └── news_analyzer.py # NewsAPI integration
-│   ├── ml/                   
+│   ├── ml/
 │   │   └── forecaster.py    # Prophet ML pipeline
-│   └── validation/           
+│   └── validation/
 │       └── pgsm_validator.py # PGSM spike detection & validation
 ├── scripts/                   # Data scraping utilities
 ├── data/                      # Data directory
@@ -318,6 +297,7 @@ civinigrani/
 ```
 
 ### Running Scripts
+
 ```bash
 # Data scraping (if source URLs change)
 python scripts/scrape_data.py
@@ -345,6 +325,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 Contributions are welcome! Please feel free to submit issues or pull requests.
 
 **Areas for contribution:**
+
 - Additional data sources
 - Enhanced ML models
 - New visualization types
@@ -364,3 +345,4 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 ---
 
 **Built with ❤️ for better governance through data transparency**
+**Team CogniThread**
