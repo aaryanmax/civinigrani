@@ -91,7 +91,7 @@ The installation script now automatically **sets up the environment** and **fetc
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/civinigrani.git
+git clone https://github.com/aaryanmax/civinigrani.git
 cd civinigrani
 
 # Run the automated installer
@@ -103,7 +103,7 @@ chmod +x install.sh
 
 ```powershell
 # Clone the repository
-git clone https://github.com/yourusername/civinigrani.git
+git clone https://github.com/aaryanmax/civinigrani.git
 cd civinigrani
 
 # Run the automated installer
