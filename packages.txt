@@ -1,10 +1,4 @@
-# System packages required for geospatial libraries
-# These will be installed by apt-get on Streamlit Cloud
-
-# For geopandas and geospatial operations
 libgdal-dev
 libspatialindex-dev
 libgeos-dev
-
-# For proper font rendering in matplotlib
 fonts-liberation
