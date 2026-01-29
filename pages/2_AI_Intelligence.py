@@ -143,7 +143,7 @@ with tab_forecast:
                     height=400,
                     showlegend=True
                 )
-                st.plotly_chart(fig, key=f"forecast_chart_{selected_district}", use_container_width=True)
+                st.plotly_chart(fig, key=f"forecast_chart_{selected_district}", width="stretch")
                 
                 # District Risk Summary Table
                 st.markdown("#### Forecast Details")
@@ -169,7 +169,7 @@ with tab_forecast:
                 }
             )
             fig_pie.update_layout(title="Forecast Risk Distribution", height=350)
-            st.plotly_chart(fig_pie, key="risk_pie", use_container_width=True)
+            st.plotly_chart(fig_pie, key="risk_pie", width="stretch")
             
         else:
             st.warning("No forecast data available. The ML pipeline may still be training.")

@@ -39,7 +39,13 @@ st.markdown("Unified view of PDS data, risk analysis, and geographic insights.")
 # ==============================
 # Tabs
 # ==============================
-tab_dashboard, tab_map, tab_alerts, tab_pgsm = st.tabs(["📈 Dashboard", "🗺️ Risk Map", "🚨 Alerts", "📋 Grievances"])
+tab_dashboard, tab_map, tab_alerts, tab_anomalies, tab_pgsm = st.tabs([
+    "📈 Dashboard", 
+    "🗺️ Risk Map", 
+    "🚨 Alerts", 
+    "🔍 Anomalies",
+    "📋 Grievances"
+])
 
 # ──────────────────────────────────────────
 # TAB 1: Dashboard
@@ -343,7 +349,7 @@ with tab_pgsm:
                 hovermode='x unified',
                 legend=dict(orientation="h", yanchor="bottom", y=1.02)
             )
-            st.plotly_chart(fig, key="pgsm_trend", use_container_width=True)
+            st.plotly_chart(fig, key="pgsm_trend", width="stretch")
         else:
             st.caption("Trend data unavailable.")
         
@@ -374,12 +380,257 @@ with tab_pgsm:
             }
         ))
         gauge_fig.update_layout(height=300)
-        st.plotly_chart(gauge_fig, key="disposal_gauge", use_container_width=True)
+        st.plotly_chart(gauge_fig, key="disposal_gauge", width="stretch")
         
         # Data Table
         st.markdown("### 📋 Recent Records")
         display_cols = [c for c in ['month', 'ministry', 'receipts', 'disposal', 'pending'] if c in raw_grievance_df.columns]
         st.dataframe(raw_grievance_df[display_cols].head(15), width="stretch", hide_index=True)
+
+# ──────────────────────────────────────────
+# TAB 4: Anomalies
+# ──────────────────────────────────────────
+with tab_anomalies:
+    st.subheader("🔍 Anomaly Detection")
+    st.markdown("""
+    Automated detection of suspicious patterns and outliers in PDS distribution data using **Isolation Forest** machine learning.
+    """)
+    
+    if not prgi_df.empty:
+        from src.ml.anomaly_detector import AnomalyDetector, detect_simple_anomalies
+        
+        # Prepare data with district names
+        anomaly_df = prgi_df.copy()
+        anomaly_df['district_name'] = anomaly_df['district']
+        
+        # Run both simple and ML detection
+        with st.spinner("Analyzing data for anomalies..."):
+            # Simple rule-based detection
+            anomaly_df = detect_simple_anomalies(anomaly_df)
+            
+            # ML-based detection
+            detector = AnomalyDetector(contamination=0.05)
+            detector.fit(anomaly_df)
+            anomaly_df = detector.detect(anomaly_df)
+            
+            # Get summary
+            summary = detector.get_anomaly_summary(anomaly_df)
+        
+        # Display Summary Metrics
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric(
+                "Total Records", 
+                f"{summary['total_records']:,}"
+            )
+        
+        with col2:
+            st.metric(
+                "Anomalies Detected",
+                f"{summary['total_anomalies']:,}",
+                delta=f"{summary['anomaly_rate']:.1f}% of data"
+            )
+        
+        with col3:
+            simple_count = anomaly_df['is_simple_anomaly'].sum()
+            st.metric(
+                "Critical Issues",
+                f"{simple_count:,}",
+                delta="Rule-based flags"
+            )
+        
+        with col4:
+            # Count unique districts with anomalies
+            unique_districts = anomaly_df[anomaly_df['is_anomaly']]['district'].nunique()
+            st.metric(
+                "Affected Districts",
+                f"{unique_districts}"
+            )
+        
+        # Anomaly Timeline Chart
+        st.markdown("### 📊 Anomaly Timeline")
+        
+        anomaly_timeline = anomaly_df.groupby('month').agg({
+            'is_anomaly': 'sum',
+            'is_simple_anomaly': 'sum'
+        }).reset_index()
+        anomaly_timeline['month'] = pd.to_datetime(anomaly_timeline['month'])
+        
+        import plotly.graph_objects as go
+        
+        timeline_fig = go.Figure()
+        timeline_fig.add_trace(go.Scatter(
+            x=anomaly_timeline['month'],
+            y=anomaly_timeline['is_anomaly'],
+            mode='lines+markers',
+            name='ML Detected',
+            line=dict(color='#e74c3c', width=2),
+            marker=dict(size=6)
+        ))
+        timeline_fig.add_trace(go.Scatter(
+            x=anomaly_timeline['month'],
+            y=anomaly_timeline['is_simple_anomaly'],
+            mode='lines+markers',
+            name='Critical Issues',
+            line=dict(color='#c0392b', width=2, dash='dash'),
+            marker=dict(size=6)
+        ))
+        timeline_fig.update_layout(
+            title="Anomalies Over Time",
+            xaxis_title="Month",
+            yaxis_title="Number of Anomalies",
+            hovermode='x unified',
+            height=350
+        )
+        st.plotly_chart(timeline_fig, key="anomaly_timeline", width="stretch")
+        
+        #  District Breakdown
+        col_left, col_right = st.columns(2)
+        
+        with col_left:
+            st.markdown("### 🏘️ Top Anomalous Districts")
+            if 'top_anomalous_districts' in summary and summary['top_anomalous_districts']:
+                district_df = pd.DataFrame(
+                    list(summary['top_anomalous_districts'].items()),
+                    columns=['District', 'Anomaly Count']
+                ).head(10)
+                
+                dist_fig = go.Figure(go.Bar(
+                    x=district_df['Anomaly Count'],
+                    y=district_df['District'],
+                    orientation='h',
+                    marker=dict(color='#e74c3c')
+                ))
+                dist_fig.update_layout(
+                    height=350,
+                    xaxis_title="Number of Anomalies",
+                    yaxis_title="",
+                    showlegend=False
+                )
+                st.plotly_chart(dist_fig, key="district_anomalies", width="stretch")
+            else:
+                st.info("No district-level data available")
+        
+        with col_right:
+            st.markdown("### 📅 Monthly Breakdown")
+            if 'top_anomalous_months' in summary and summary['top_anomalous_months']:
+                month_df = pd.DataFrame(
+                    list(summary['top_anomalous_months'].items()),
+                    columns=['Month', 'Anomaly Count']
+                ).head(10)
+                
+                month_fig = go.Figure(go.Bar(
+                    x=month_df['Anomaly Count'],
+                    y=month_df['Month'].astype(str),
+                    orientation='h',
+                    marker=dict(color='#c0392b')
+                ))
+                month_fig.update_layout(
+                    height=350,
+                    xaxis_title="Number of Anomalies",
+                    yaxis_title="",
+                    showlegend=False
+                )
+                st.plotly_chart(month_fig, key="month_anomalies", width="stretch")
+            else:
+                st.info("No monthly data available")
+        
+        # Detailed Anomaly Table
+        st.markdown("### ⚠️ Detected Anomalies")
+        
+        # Filter and sort anomalies
+        anomaly_records = anomaly_df[anomaly_df['is_anomaly']].copy()
+        anomaly_records = anomaly_records.sort_values('anomaly_score')  # Most anomalous first
+        
+        # Display controls
+        col_filter1, col_filter2 = st.columns(2)
+        with col_filter1:
+            show_critical_only = st.checkbox("Show only critical issues (100% gap, zero distribution)", value=False)
+        with col_filter2:
+            max_display = st.slider("Number of records to display", 10, 100, 50, 10)
+        
+        if show_critical_only:
+            anomaly_records = anomaly_records[anomaly_records['is_simple_anomaly']]
+        
+        # Format display
+        if not anomaly_records.empty:
+            display_df = anomaly_records[[
+                'month', 'district', 'allocation', 'distribution', 'prgi', 'anomaly_reason', 'simple_anomaly'
+            ]].head(max_display).copy()
+            
+            display_df['month'] = pd.to_datetime(display_df['month']).dt.strftime('%Y-%m')
+            display_df['prgi'] = (display_df['prgi'] * 100).round(1).astype(str) + '%'
+            display_df['allocation'] = display_df['allocation'].apply(lambda x: f"{x:,.0f}")
+            display_df['distribution'] = display_df['distribution'].apply(lambda x: f"{x:,.0f}")
+            
+            # Rename columns for display
+            display_df = display_df.rename(columns={
+                'month': 'Month',
+                'district': 'District',
+                'allocation': 'Allocated (Qt)',
+                'distribution': 'Distributed (Qt)',
+                'prgi': 'Gap %',
+                'anomaly_reason': 'ML Detection Reason',
+                'simple_anomaly': 'Critical Issues'
+            })
+            
+            # Add anomaly badge
+            def highlight_row(row):
+                if row['Critical Issues']:
+                    return ['background-color: #ffebee'] * len(row)
+                return [''] * len(row)
+            
+            st.dataframe(
+                display_df,
+                width="stretch",
+                hide_index=True,
+                height=400
+            )
+            
+            # Download button for anomalies
+            csv = anomaly_records.to_csv(index=False)
+            st.download_button(
+                label="📥 Download Anomalies (CSV)",
+                data=csv,
+                file_name="civinigrani_anomalies.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("No anomalies detected! ✅ Data quality looks good.")
+        
+        # Methodology explanation
+        with st.expander("ℹ️ How Anomaly Detection Works"):
+            st.markdown("""
+            This system uses two approaches to detect anomalies:
+            
+            **1. Rule-Based Detection (Critical Issues)**
+            - 100% delivery gap (possible data corruption)
+            - Zero distribution despite allocation
+            - Distribution exceeding allocation (impossible)
+            - Negative values
+            
+            **2. ML-Based Detection (Isolation Forest)**
+            - Trains on historical patterns of allocation, distribution, and PRGI
+            - Uses temporal features and rolling statistics
+            - Flags statistical outliers (5% contamination threshold)
+            - Provides explainability for each detection
+            
+            **Features Used:**
+            - Allocation & Distribution amounts
+            - PRGI (delivery gap)
+            - Temporal patterns (month-over-month changes)
+            - Lag features (previous months)
+            - Rolling mean and standard deviation
+            
+            **Use Cases:**
+            - Quality control for data entry errors
+            - Early detection of systemic failures
+            - Identifying districts needing intervention
+            - Audit trail for suspicious patterns
+            """)
+    else:
+        st.warning("No PDS data available for anomaly detection.")
 
 # ==============================
 # Footer
