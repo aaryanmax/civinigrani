@@ -49,12 +49,25 @@ def _fetch_pds_data():
         return False
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def load_pds_data() -> pd.DataFrame:
+def load_pds_data(test_mode: bool = False) -> pd.DataFrame:
     """
     Loads PDS distribution data safely.
     Auto-fetches from official source if file doesn't exist.
-    Returns: DataFrame with data or Empty DataFrame on error.
+    
+    Args:
+        test_mode: If True, loads dummy data from data/test/pds_test.csv
+        
+    Returns: Dataframe with data or Empty DataFrame on error.
     """
+    if test_mode:
+        test_path = Path("data/test/pds_test.csv").resolve()
+        if test_path.exists():
+            print(f"🧪 Loading TEST data from {test_path}")
+            return pd.read_csv(test_path)
+        else:
+            print(f"❌ Test data not found at {test_path}")
+            return pd.DataFrame()
+
     # Resolve to absolute path for cross-platform compatibility
     pds_path = PDS_RAW_PATH.resolve()
     

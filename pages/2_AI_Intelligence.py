@@ -30,6 +30,12 @@ except ImportError as e:
     MODULES_AVAILABLE = False
     error_msg = str(e)
 
+# PeerLens imports
+from src.intelligence.peerlens import PeerLens
+from src.population_fetcher import load_population_data
+from src.prgi import compute_prgi
+from src import loaders
+
 
 st.set_page_config(
     page_title="AI Intelligence | CiviNigrani",
@@ -48,7 +54,7 @@ st.markdown("Advanced analytics combining ML forecasts, validation, and news int
 # ==============================
 # Tabs
 # ==============================
-tab_forecast, tab_validation = st.tabs(["🔮 AI Forecasts", "📊 PGSM Validation"])
+tab_forecast, tab_validation, tab_peerlens = st.tabs(["🔮 AI Forecasts", "📊 PGSM Validation", "🔍 PeerLens"])
 
 
 # ──────────────────────────────────────────
@@ -221,10 +227,171 @@ with tab_validation:
         st.dataframe(validation_df.head(50), width="stretch", hide_index=True)
 
 
+# ──────────────────────────────────────────
+# TAB 3: PeerLens
+# ──────────────────────────────────────────
+with tab_peerlens:
+    st.subheader("🔍 Fair Peer Comparison")
+    st.markdown(
+        "Districts are compared only against structurally similar peers. "
+        "No rankings. No predictions. Fully explainable."
+    )
+    
+    # Load data
+    @st.cache_data(ttl=3600)
+    def load_peerlens_data():
+        raw_pds = loaders.load_pds_data()
+        prgi = compute_prgi(raw_pds)
+        population = load_population_data()
+        grievance = loaders.load_grievance_data()
+        return prgi, population, grievance
+    
+    with st.spinner("Loading peer comparison data..."):
+        prgi_data, pop_data, griev_data = load_peerlens_data()
+    
+    if prgi_data.empty:
+        st.warning("PDS/PRGI data not available for peer comparison.")
+    else:
+        st.markdown("---")
+        
+        # Controls
+        st.markdown("### ⚙️ Peer Matching Controls")
+        col_ctrl1, col_ctrl2, col_ctrl3 = st.columns(3)
+        
+        with col_ctrl1:
+            alpha = st.slider(
+                "Population tolerance (%)",
+                min_value=5,
+                max_value=50,
+                value=25,
+                help="How similar the population of peer districts must be",
+                key="peerlens_alpha"
+            ) / 100
+        
+        with col_ctrl2:
+            beta = st.slider(
+                "Allocation tolerance (%)",
+                min_value=5,
+                max_value=50,
+                value=25,
+                help="How similar the budget allocation must be",
+                key="peerlens_beta"
+            ) / 100
+        
+        with col_ctrl3:
+            min_peers = st.number_input(
+                "Minimum peers",
+                min_value=1,
+                max_value=10,
+                value=2,
+                help="Minimum peers for reliable comparison",
+                key="peerlens_min_peers"
+            )
+        
+        # Initialize PeerLens engine
+        engine = PeerLens(
+            prgi_df=prgi_data,
+            population_df=pop_data,
+            grievance_df=griev_data,
+            alpha=alpha,
+            beta=beta,
+            min_peers=min_peers
+        )
+        
+        districts = engine.get_districts()
+        
+        if not districts:
+            st.warning("No districts available for comparison.")
+        else:
+            st.markdown("---")
+            st.markdown("### 📊 District Analysis")
+            
+            district = st.selectbox(
+                "Select District",
+                [d.title() for d in districts],
+                key="peerlens_district"
+            )
+            
+            if district:
+                result = engine.analyze_district(district)
+                
+                if "error" in result:
+                    st.error(result["error"])
+                elif not result.get("comparison_valid", False):
+                    st.warning(f"⚠️ {result.get('note', 'Insufficient peers')}")
+                    st.info("Try increasing the tolerance sliders to find more peers.")
+                else:
+                    st.success(f"✅ Comparison based on **{result['peer_count']} peer districts**")
+                    
+                    # Metric Cards
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        prgi_val = result.get('prgi_relative')
+                        if prgi_val is not None and not pd.isna(prgi_val):
+                            st.metric(
+                                "Delivery Gap (PRGI)",
+                                f"{prgi_val:.2f}",
+                                result["interpretation"]["delivery_gap"],
+                                delta_color="inverse" if prgi_val > 1.0 else "normal"
+                            )
+                        else:
+                            st.metric("Delivery Gap", "N/A")
+                    
+                    with col2:
+                        grievance_val = result.get('grievance_relative')
+                        if grievance_val is not None and not pd.isna(grievance_val):
+                            st.metric(
+                                "Grievance Pressure",
+                                f"{grievance_val:.2f}",
+                                result["interpretation"]["grievance_pressure"],
+                                delta_color="inverse" if grievance_val > 1.0 else "normal"
+                            )
+                        else:
+                            st.metric("Grievance Pressure", "N/A")
+                    
+                    with col3:
+                        resolution_val = result.get('resolution_relative')
+                        if resolution_val is not None and not pd.isna(resolution_val):
+                            st.metric(
+                                "Resolution Capacity",
+                                f"{resolution_val:.2f}",
+                                result["interpretation"]["resolution_capacity"],
+                                delta_color="normal" if resolution_val > 1.0 else "inverse"
+                            )
+                        else:
+                            st.metric("Resolution Capacity", "N/A")
+                    
+                    # Peer Districts
+                    st.markdown("---")
+                    st.markdown("### 🏘️ Peer Districts Used")
+                    peer_list = result.get("peer_districts", [])
+                    if peer_list:
+                        st.info(f"Compared against: **{', '.join(peer_list[:10])}**" + 
+                                (f" and {len(peer_list)-10} more" if len(peer_list) > 10 else ""))
+                    
+                    # Methodology
+                    with st.expander("ℹ️ How PeerLens Works"):
+                        st.markdown("""
+                        **PeerLens** compares districts only against structurally similar peers:
+                        
+                        1. **Population Matching**: Districts with similar population (±tolerance%)
+                        2. **Allocation Matching**: Districts with similar budget allocation (±tolerance%)
+                        3. **Relative Comparison**: Your district's metrics vs median of peers
+                        
+                        **Metrics Explained:**
+                        - **Delivery Gap Ratio**: Your PRGI ÷ Peer median PRGI (lower is better)
+                        - **Grievance Pressure**: Your complaints/capita ÷ Peer median (lower is better)
+                        - **Resolution Capacity**: Your resolution rate ÷ Peer median (higher is better)
+                        
+                        A ratio of 1.0 means you're exactly at the peer average.
+                        """)
+
+
 # ==============================
 # Footer
 # ==============================
 st.markdown("---")
 st.caption(
-    "CiviNigrani AI Intelligence • Powered by Prophet ML and News Analysis"
+    "CiviNigrani AI Intelligence • Powered by Prophet ML, PeerLens, and News Analysis"
 )

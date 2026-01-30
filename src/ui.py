@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_float import float_init, float_css_helper
+import pandas as pd
 from src.ai_engine import MockAIEngine
 from src.armoriq_guard import ArmorIQGuard
 
@@ -191,58 +192,161 @@ def _render_floating_ai_bubble():
     # Initialize dialog state
     if "ai_dialog_open" not in st.session_state:
         st.session_state.ai_dialog_open = False
+
+    # Initialize Test Mode state
+    if "test_mode" not in st.session_state:
+        st.session_state.test_mode = False
+    
+    # Initialize agent if not already done
+    if "query_agent" not in st.session_state:
+        try:
+            from src.agent import QueryAgent, DataTools
+            from src.loaders import load_pds_data, load_grievance_data
+            from src.prgi import compute_prgi
+            
+            # Load data for agent (Test Mode aware)
+            is_test = st.session_state.test_mode
+            pds_data = load_pds_data(test_mode=is_test)
+            
+            # Compute PRGI
+            prgi_data = compute_prgi(pds_data) # Handles test data structure via state_name fix
+            
+            # Grievance data (only real, or empty for test)
+            grievance_data = load_grievance_data() if not is_test else pd.DataFrame()
+            
+            # Initialize tools and agent
+            tools = DataTools(prgi_data, grievance_data)
+            st.session_state.query_agent = QueryAgent(tools, use_gemini=True)
+            st.session_state.agent_ready = True
+            
+            if is_test:
+                print("🧪 Agent initialized in TEST MODE with dummy data.")
+                
+        except Exception as e:
+            st.session_state.agent_ready = False
+            st.session_state.agent_error = str(e)
     
     # Define the dialog content (not using decorator to avoid duplicate ID)
     def show_ai_dialog():
-        # Use fragment to contain the dialog
-        @st.dialog("🤖 AI Assistant", width="small")
+        @st.dialog("🤖 AI Assistant", width="large")
         def _dialog_content():
-            # Simple header
-            st.caption("🛡️ Verified by ArmorIQ SDK")
+            st.caption("🛡️ Verified by ArmorIQ SDK • Natural Language Data Explorer")
             
-            # Chat history display in a container
-            chat_container = st.container(height=300)
+            # Test Mode Toggle
+            def on_test_mode_change():
+                # Clear agent to force reload on next run
+                if "query_agent" in st.session_state:
+                    del st.session_state.query_agent
+                st.session_state.agent_ready = False  # Reset readiness flag
+                st.session_state.chat_history = []  # Clear history context
+                
+            st.toggle("🧪 Test Database (Safe Mode)", key="test_mode", on_change=on_test_mode_change)
+            
+            if st.session_state.test_mode:
+                st.info("⚠️ Using **Test Database** (5 dummy districts). Real data is protected. Admin writes allowed.")
+
+            if not st.session_state.get("agent_ready", False):
+                # If agent not ready, try to re-initialize immediately (for dialog context)
+                # This handles cases where sidebar re-run hasn't happened yet or failed
+                 try:
+                    from src.agent import QueryAgent, DataTools
+                    from src.loaders import load_pds_data, load_grievance_data
+                    from src.prgi import compute_prgi
+                    
+                    is_test = st.session_state.test_mode
+                    pds_data = load_pds_data(test_mode=is_test)
+                    prgi_data = compute_prgi(pds_data) # Handles test data structure via state_name fix
+                    grievance_data = load_grievance_data() if not is_test else pd.DataFrame()
+                    
+                    tools = DataTools(prgi_data, grievance_data)
+                    st.session_state.query_agent = QueryAgent(tools, use_gemini=True)
+                    st.session_state.agent_ready = True
+                 except Exception as e:
+                    st.error(f"⚠️ Agent initialization failed: {str(e)}")
+                    return
+            
+            # Double check agent existence to avoid AttributeError
+            if "query_agent" not in st.session_state:
+                st.error("⚠️ System Error: Agent state missing. Please refresh the page.")
+                return
+            
+            # Role Selection (Hackathon Demo)
+            st.divider()
+            st.markdown("### 👤 User Identity")
+            if "user_role" not in st.session_state:
+                st.session_state.user_role = "Analyst"
+            
+            role = st.selectbox(
+                "Select Role", 
+                ["Analyst", "Admin"], 
+                index=0 if st.session_state.user_role == "Analyst" else 1,
+                key="role_selector",
+                on_change=lambda: st.session_state.update({"user_role": st.session_state.role_selector})
+            )
+            
+            role_desc = "Read-only access" if role == "Analyst" else "Full read/write access"
+            st.caption(f"Permissions: {role_desc}")
+            st.divider()
+
+            # Example queries
+            with st.expander("💡 Example Queries", expanded=False):
+                st.markdown("""
+                - "**Analyst**: Show top 5 districts by PRGI"
+                - "**Analyst**: Summarize performance"
+                - "**Admin**: Update Lucknow PRGI to 0.9" (Try as Analyst to see blocking!)
+                """)
+            
+            # Chat history
+            chat_container = st.container(height=350)
             with chat_container:
                 history = st.session_state.get("chat_history", [])
                 if history:
                     for msg in history[-8:]:
                         if msg["role"] == "user":
-                            st.markdown(f"**You:** {msg['content']}")
+                            st.markdown(f"**You ({st.session_state.user_role}):** {msg['content']}")
                         else:
-                            badge = " ✓" if msg.get("verified") else ""
-                            st.markdown(f"**AI:** {msg['content']}{badge}")
+                            badge = " ✓ Verified" if msg.get("verified") else ""
+                            st.markdown(f"**AI:** {msg['content']} `{badge}`")
                 else:
-                    st.write("Ask about PDS gaps, district trends, or best performers!")
+                    st.info(f"👋 Hello {role}! Ask about PDS delivery gaps or try updating data.")
             
             # Input form
             with st.form("dialog_ai_form", clear_on_submit=True):
-                q = st.text_input(
-                    "Ask", 
-                    key="dialog_ai_q", 
-                    label_visibility="collapsed", 
-                    placeholder="Type your question..."
-                )
-                if st.form_submit_button("Send", type="primary", width="stretch"):
+                q = st.text_input("Ask", key="dialog_ai_q", label_visibility="collapsed", placeholder="Type your question...")
+                if st.form_submit_button("Send", type="primary", use_container_width=True):
                     if q:
                         if "chat_history" not in st.session_state:
                             st.session_state.chat_history = []
+                        
                         st.session_state.chat_history.append({"role": "user", "content": q})
-                        resp = ai_engine.query(q)
-                        scan = armor_iq.scan(resp)
-                        st.session_state.chat_history.append({
-                            "role": "ai", 
-                            "content": resp if scan["safe"] else f"⚠️ {scan['flagged_for']}",
-                            "verified": scan["safe"]
-                        })
+                        
+                        # Query agent with ArmorIQ validation
+                        agent = st.session_state.query_agent
+                        # Pass user role to query()
+                        response = agent.query(q, user_role=st.session_state.user_role)
+                        
+                        if response.get("success", False):
+                            st.session_state.chat_history.append({
+                                "role": "ai", 
+                                "content": response.get("answer", "No answer available."),
+                                "verified": response.get("armoriq_verified", False)
+                            })
+                        else:
+                            st.session_state.chat_history.append({
+                                "role": "ai", 
+                                "content": f"⚠️ {response.get('error', 'Query failed')}",
+                                "verified": True
+                            })
+                        
                         st.session_state.ai_dialog_open = True
                         st.rerun()
         
         _dialog_content()
     
-    # Render button in sidebar to open dialog
+    # Render button in sidebar
     with st.sidebar:
         st.divider()
-        if st.button("🤖 **AI Assistant**", width="stretch", type="secondary"):
+        if st.button("🤖 **AI Assistant**", use_container_width=True, type="secondary"):
             st.session_state.ai_dialog_open = True
     
     # Show dialog if flag is set, then reset flag

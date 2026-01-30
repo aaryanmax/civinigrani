@@ -31,18 +31,35 @@ At the same time, **citizen grievance data** — such as monthly complaints and 
 - **PGSM Validation**: Accuracy metrics for grievance spike predictions
 - **News Intelligence**: Automated root cause analysis using NewsAPI (when configured)
 
-### 🛡️ ArmorIQ Security Guard
+### 🛡️ ArmorIQ Verified Agent
+- **Verified Tool Execution**: Implements the **Plan → Token → Invoke** pattern for secure tool usage.
+- **Role-Based Access Control (RBAC)**:
+  - **Analyst (Read-Only)**: Can query data but is blocked from making changes.
+  - **Admin (Read/Write)**: Authorized to update sensitive data (e.g., PRGI corrections).
+- **Safety Guardrails**: Real-time scanning for PII (Personally Identifiable Information) and toxicity in both queries and responses.
+- **Audit Support**: Verification badges indicate safe, authorized responses.
 
-- **PII Detection**: Local regex-based filtering for Indian mobile numbers, Aadhaar patterns, emails
-- **Toxicity Filtering**: Keyword-based content moderation
-- **No external API required** - runs completely locally
+---
 
-### 🤖 AI Assistant
+## 🔒 ArmorIQ Implementation
 
-- **Conversational Interface**: Ask questions about district performance
-- **Dynamic Data Analysis**: Real-time insights from live PDS data
-- **Data Sanity Checks**: Flags potential data corruption (e.g., 100% gaps)
-- **ArmorIQ Verified**: All responses scanned for PII and toxic content
+CiviNigrani integrates **ArmorIQ SDK** to transform a standard AI assistant into a **Verified Agent** suitable for government use.
+
+### Architecture
+The system uses a **Model Context Protocol (MCP)** server architecture wrapped with ArmorIQ verification:
+
+1.  **Plan Generation**: The agent (Gemini 2.0 Flash) analyzes the user query and proposes a tool execution plan.
+2.  **Policy Check**: ArmorIQ intercepts the plan.
+    -   *If User is Analyst*: Write operations (e.g., `update_district_prgi`) are **BLOCKED**.
+    -   *If User is Admin*: Write operations are **ALLOWED** (verified token issued).
+3.  **Secure Invocation**: The MCP server only executes the tool if a valid verification token is present.
+4.  **Output Scanning**: The final response is scanned for sensitive data before being shown to the user.
+
+### Usage
+- **Select Role**: Use the sidebar "User Identity" selector to switch between `Analyst` and `Admin`.
+- **Try it out**:
+    -   *As Analyst*: Ask "Update Lucknow PRGI to 0.9". **Result**: Blocked.
+    -   *As Admin*: Ask "Update Lucknow PRGI to 0.9". **Result**: Success.
 
 ### 📚 About Page
 

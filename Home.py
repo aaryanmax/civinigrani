@@ -10,7 +10,7 @@
 #   Home.py              <- You are here (Home)
 #   pages/
 #     1_Overview.py      <- Dashboard + Risk Map + Alerts
-#     2_AI_Intelligence.py <- AI Forecasts + PGSM Validation
+#     2_AI_Intelligence.py <- AI Forecasts + PGSM Validation + PeerLens
 #     3_About.py         <- Technical Documentation
 # ==============================
 
@@ -66,7 +66,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown(
         """
-        **Overview**  
+        **📊 Overview**  
         View delivery gap analysis with interactive visuals and real-time metrics.
         """
     )
@@ -75,8 +75,8 @@ with col1:
 with col2:
     st.markdown(
         """
-        **AI Intelligence**  
-        AI-powered forecasts, PGSM validation, and news analysis.
+        **🤖 AI Intelligence**  
+        ML forecasts, PGSM validation, PeerLens comparison, and news analysis.
         """
     )
     st.page_link("pages/2_AI_Intelligence.py", label="Open AI Intelligence", icon="🤖")
@@ -84,7 +84,7 @@ with col2:
 with col3:
     st.markdown(
         """
-        **About**  
+        **📚 About**  
         Understand how PRGI, PGSM, and risk levels are calculated.
         """
     )

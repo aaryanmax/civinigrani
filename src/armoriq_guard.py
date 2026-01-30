@@ -21,11 +21,25 @@ class ArmorIQGuard:
             "Email": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
         }
         
-        # Blocked Keywords
+        # Blocked Keywords (Toxicity/Bias)
         self.blocked_keywords = [
             "corrupt politician", "vote for", "election fraud", 
             "bribe paid", "commission agent", "private phone",
             "kickback", "don't vote"
+        ]
+        
+        # Hateful/Toxic Sentiment Patterns
+        self.hate_patterns = [
+            "hate", "kill", "destroy", "attack", "murder",
+            "terrorist", "scum", "trash", "garbage people",
+            "should die", "deserve death", "burn them",
+            "ethnic cleansing", "genocide", "vote-chor"
+        ]
+        
+        # Write operation patterns (for read-only enforcement)
+        self.write_patterns = [
+            "delete", "remove", "drop", "truncate", "update",
+            "modify", "change", "alter", "insert", "create"
         ]
     
     def scan(self, text: str) -> dict:
@@ -63,5 +77,55 @@ class ArmorIQGuard:
             "latency": f"{latency:.4f}s",
             "checks_passed": ["Bias", "PII", "Toxicity"],
             "verification_badge": "🛡️ Verified by ArmorIQ (Local)"
+        }
+    
+    def validate_query(self, query: str) -> dict:
+        """
+        Validates user query for safety and compliance.
+        Blocks hateful content and write operations.
+        
+        Args:
+            query: User's natural language query
+            
+        Returns:
+            Dict with validation status and reason
+        """
+        query_lower = query.lower()
+        
+        # 1. Check for hateful/toxic sentiment
+        for hate_word in self.hate_patterns:
+            if hate_word in query_lower:
+                return {
+                    "valid": False,
+                    "reason": "Hateful or toxic content detected",
+                    "action": "BLOCK",
+                    "confidence": 0.95
+                }
+        
+        # 2. Check for write operations (read-only enforcement)
+        for write_op in self.write_patterns:
+            if write_op in query_lower:
+                return {
+                    "valid": False,
+                    "reason": "Write operation not permitted. Read-only access enforced.",
+                    "action": "BLOCK",
+                    "confidence": 0.99
+                }
+        
+        # 3. Check for PII in query
+        for pii_type, pattern in self.pii_patterns.items():
+            if re.search(pattern, query):
+                return {
+                    "valid": False,
+                    "reason": f"PII detected in query ({pii_type})",
+                    "action": "REDACT",
+                    "confidence": 0.99
+                }
+        
+        # 4. Valid query
+        return {
+            "valid": True,
+            "reason": "Query passed all safety checks",
+            "checks_passed": ["Sentiment", "PII", "Read-only"]
         }
 
