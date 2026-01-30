@@ -235,6 +235,56 @@ class DataTools:
         
         return {"summary": summary, "citation": citation}
     
+    def update_district_prgi(self, district: str, prgi: float) -> Dict[str, Any]:
+        """
+        Update PRGI value for a district (Admin only).
+        Updates the in-memory dataframe.
+        
+        Args:
+            district: Name of the district
+            prgi: New PRGI value (0.0 to 1.0)
+            
+        Returns:
+            Dict with success status and updated details
+        """
+        if self.prgi_df.empty:
+            return {"error": "No data available to update", "success": False}
+            
+        # Case-insensitive match
+        mask = self.prgi_df['district'].str.lower() == district.lower()
+        
+        if not mask.any():
+            return {"error": f"District '{district}' not found", "success": False}
+        
+        # Update PRGI
+        # We update all records for simplicity in this demo, or just the latest?
+        # Let's update the latest one to simulate "current status update"
+        
+        # Get indices of matching rows
+        indices = self.prgi_df[mask].index
+        
+        # Sort by month if possible to get latest
+        if 'month' in self.prgi_df.columns:
+            # We assume the dataframe index corresponds to rows
+            # Let's just update ALL rows for that district to showing the impact clearly in charts
+            # Or better, just the latest month.
+            # But users might check "avg prgi".
+            # For the demo "Update Lucknow to 0.9", update ALL makes the effect obvious immediately.
+            self.prgi_df.loc[mask, 'prgi'] = float(prgi)
+            
+            # Keep consistency: Dist = Alloc * (1 - PRGI)
+            if 'allocation' in self.prgi_df.columns and 'distribution' in self.prgi_df.columns:
+                self.prgi_df.loc[mask, 'distribution'] = self.prgi_df.loc[mask, 'allocation'] * (1.0 - float(prgi))
+                
+            return {
+                "success": True, 
+                "message": f"Successfully updated {district} PRGI to {prgi}",
+                "updated_count": int(mask.sum()),
+                "new_prgi": prgi
+            }
+        
+        return {"error": "Could not identify rows to update", "success": False}
+    
     def get_available_tools(self) -> List[Dict[str, str]]:
         """Return list of available tool descriptions for the agent."""
         return [
@@ -257,5 +307,10 @@ class DataTools:
                 "name": "summarize_state_performance",
                 "description": "Generate comprehensive state-level performance summary with risk classification.",
                 "parameters": "year (optional str)"
+            },
+            {
+                "name": "update_district_prgi",
+                "description": "Update PRGI value for a specific district. Requires Admin privileges.",
+                "parameters": "district (str), prgi (float)"
             }
         ]
